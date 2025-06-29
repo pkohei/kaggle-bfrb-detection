@@ -35,7 +35,7 @@
     }
   },
   "forwardPorts": [],
-  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && echo 'Development environment ready! Run: uv sync' && if [ -f .devcontainer/ssh-setup.sh ]; then chmod +x .devcontainer/ssh-setup.sh && echo '🔐 SSH client available. Run .devcontainer/ssh-setup.sh to verify SSH agent forwarding.'; fi && echo '💾 Claude Code conversation history will be preserved across container rebuilds.'",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode && echo 'Development environment ready! Run: uv sync' && if [ -f .devcontainer/ssh-setup.sh ]; then chmod +x .devcontainer/ssh-setup.sh && echo '🔐 SSH client available. Run .devcontainer/ssh-setup.sh to verify SSH agent forwarding.'; fi && echo '💾 Claude Code conversation history will be preserved across container rebuilds.'",
   "remoteUser": "vscode",
   "workspaceFolder": "/workspace",
   "mounts": [

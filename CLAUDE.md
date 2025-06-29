@@ -151,40 +151,58 @@ uv run pre-commit run --all-files
 
 **ユーザーから特に指定がない限り、実験開発では以下のワークフローに従ってください**
 
-1. **実験計画（GitHub Issue）**
+1. **実験計画（GitHub Issue）** - **Gemini CLI推奨**
+   - **Gemini活用判断**: 技術調査、手法比較、包括的な実験設計が必要な場合は積極的に活用
+   - **必須手順**: Gemini CLI使用前に専用ドキュメント（gemini-templates.md、gemini-tool-selection.md）を参照し、適切な指示構成を準備
    - 実験テンプレートを使用してGitHub Issueを作成: `.github/ISSUE_TEMPLATE/experiment.md`
+   - **Gemini活用例**: 最新手法の調査、実験アプローチの妥当性検証、リスク分析
    - 仮説、手法、成功基準、予想スケジュールを定義
    - ベースライン比較と評価指標を含める
    - 実験アプローチについて承認/議論を得る
 
 2. **実験セットアップ**
+   - **Gemini活用判断**: 通常は不要（定型的な作業のため）
    - mainブランチをチェックアウトして最新の変更を取得: `git pull origin main`
    - 実験ブランチを作成: `git checkout -b experiment/[issue番号]-[簡潔な説明]`
    - 追跡可能性のためブランチ名にissue番号を含める
 
 3. **実験開発**
+   - **Gemini活用判断**: 複雑な実装方針や設計判断が必要な場合に活用検討
    - Issueの計画に従って実験を実装
+   - **Gemini活用例**: 実装アプローチの最適化、コード設計のレビュー
    - 再現性のため`scripts/`でスクリプトを作成または修正
    - 明確な結果とともにJupyterノートブックで実験を文書化
    - issueを参照する意味のあるメッセージでコミット
 
-4. **実験実行と文書化**
+4. **実験実行と文書化** - **Gemini CLI推奨**
+   - **Gemini活用判断**: 結果の解釈、異常値の分析、洞察の発見で強く推奨
+   - **必須手順**: Gemini CLI使用前にgemini-templates.md（調査・研究タスク用）を参照し、結果分析に適した指示構成を準備
    - 実験を実行して結果を収集
+   - **Gemini活用例**: 実験結果の包括的分析、予期しない結果の解釈、改善提案
    - 可視化と性能指標を生成
    - 発見、洞察、次のステップを文書化
    - 該当する場合は提出ファイルを作成
 
-5. **結果を含むPull Request**
+5. **結果を含むPull Request** - **Gemini CLI推奨**
+   - **Gemini活用判断**: 実験結果の総合評価とプレゼンテーション改善で推奨
+   - **必須手順**: gemini-templates.md（分析・レビュータスク用）を確認し、包括的な分析指示を構成
    - 実験結果テンプレートを使用してPRを作成: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
+   - **Gemini活用例**: 結果サマリーの最適化、発見事項の構造化、次のステップ提案
    - 実験結果、可視化、分析を含める
    - 主要な発見と推奨事項をまとめる
    - 文脈のため元のIssueにリンク
 
 6. **レビューと統合**
+   - **Gemini活用判断**: 通常は不要（対人コミュニケーションが中心のため）
    - レビューフィードバックと質問に対応
    - レビュワーと結果と影響について議論
    - 承認後にPRをマージし、関連Issueをクローズ
    - mainブランチを更新し、実験ブランチをクリーンアップ
+
+#### Gemini CLI活用のクイック判断基準
+- **積極的に活用**: 技術調査、結果分析、包括的レビューが必要なタスク
+- **活用検討**: 複雑な判断や設計が必要なタスク
+- **通常不要**: 定型作業、対人コミュニケーション、単純なコード修正
 
 ### テンプレート
 
@@ -284,3 +302,55 @@ watch -n 1 nvidia-smi
 - scripts/README.mdで詳細なコマンド使用法をレビュー
 - プロジェクト状況確認: `uv run python scripts/project_summary.py`
 - 実験計画と議論のためのGitHub Issue作成
+
+## Gemini CLI 連携ガイド
+
+### 概要
+
+Gemini CLIは以下の特徴を持つAI Agentです。
+
+- 強み（あなたよりも得意なこと）
+   - 強力なWeb検索
+   - マルチモーダル対応（画像やPDF）
+   - 広いコンテキストウィンドウを活用したコードレビュー
+   - 柔軟な発想、人間的な思考力
+- 弱み（あなたよりも苦手なこと）
+   - 開発や実験の詳細な計画
+   - ツールの使い分け
+
+これらの強み・弱みを踏まえて、タスクを進めるうえで必要に応じてGemini CLIにタスクを委譲することで、より高品質なタスク遂行が可能になります。**うまくGemini CLI を使いながらタスクを進めてください**
+
+
+### Gemini CLIの基本機能
+
+- 自律的なコマンド実行によるタスク実行
+- リポジトリ内の読み込み・編集
+- Web検索
+
+### コマンド実行方法
+
+```bash
+gemini -p "指示内容"
+```
+
+
+### 重要な特性
+- **会話記憶なし** - コマンド実行ごとにすべてを忘却、毎回完全な指示が必要
+- **作業制約の明記** - 「作業はしないでください」で不可逆な作業を防止
+- **安全実行モード** - `--yolo`オプションで全コマンド実行を許可可能
+
+### 📖 Claude Code専用ドキュメント
+**Gemini CLIを使用する前に、以下のドキュメントを必ず参照してください：**
+
+- **指示設計方法**: [docs/claude/gemini-templates.md](docs/claude/gemini-templates.md) - 効果的な指示の構成とテンプレート
+- **ツール選択基準**: [docs/claude/gemini-tool-selection.md](docs/claude/gemini-tool-selection.md) - 適切なツール選択の判断基準
+- **連携ワークフロー**: [docs/claude/gemini-workflows.md](docs/claude/gemini-workflows.md) - 分析結果の活用パターン
+- **トラブルシューティング**: [docs/claude/gemini-troubleshooting.md](docs/claude/gemini-troubleshooting.md) - 問題発生時の対処法
+
+**重要**: これらのドキュメントは、Gemini CLIを効果的に活用するために必須です。使用前に必ず確認してください。
+
+### ドキュメント
+
+Gemini CLIの使い方について悩んだときは下記のドキュメントを参照してください。
+
+- https://github.com/google-gemini/gemini-cli/blob/main/docs/index.md
