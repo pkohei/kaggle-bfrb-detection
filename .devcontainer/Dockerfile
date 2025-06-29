@@ -32,12 +32,15 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
     && apt-get install -y gh \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js for Claude Code CLI
+# Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get install -y nodejs
 
 # Install Claude Code CLI globally as root
 RUN npm install -g @anthropic-ai/claude-code
+
+# Install Gemini CLI globally as root
+RUN npm install -g @google/gemini-cli
 
 # Create symlinks for python
 RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
