@@ -63,6 +63,12 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# 実験用スクリプトディレクトリと外部ファイルを除外
+exclude = [
+    "scripts/.*",
+    "notebooks/.*",
+    "data/.*",
+]
 
 # 個別ライブラリの型チェック無効化
 [[tool.mypy.overrides]]
