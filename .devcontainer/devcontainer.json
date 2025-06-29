@@ -1,0 +1,47 @@
+{
+  "name": "bfrb Development Environment",
+  "dockerComposeFile": "../compose.yml",
+  "service": "dev",
+  "runArgs": [
+    "--gpus=all"
+  ],
+  "hostRequirements": {
+    "gpu": true
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.docker",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3.12",
+        "python.terminal.activateEnvironment": true,
+        "files.associations": {
+          "*.yml": "yaml",
+          "*.yaml": "yaml"
+        }
+      }
+    }
+  },
+  "forwardPorts": [],
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && echo 'Development environment ready! Run: uv sync' && if [ -f .devcontainer/ssh-setup.sh ]; then chmod +x .devcontainer/ssh-setup.sh && echo '🔐 SSH client available. Run .devcontainer/ssh-setup.sh to verify SSH agent forwarding.'; fi && echo '💾 Claude Code conversation history will be preserved across container rebuilds.'",
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=${localEnv:SSH_AUTH_SOCK},target=/tmp/ssh-agent.sock,type=bind"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"
+  }
+}

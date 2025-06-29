@@ -1,0 +1,24 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+      target: development
+      args:
+        PYTHON_VERSION: 3.12
+        NODEJS_VERSION: latest
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - ./:/workspace
+      - uv-cache:/home/vscode/.cache/uv
+      - claude-data:/home/vscode/.claude
+    working_dir: /workspace
+    command: tail -f /dev/null
+    user: vscode
+
+volumes:
+  uv-cache:
+  claude-data:

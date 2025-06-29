@@ -1,0 +1,84 @@
+_templates_suffix: .jinja
+_envops:
+  block_start_string: "{%"
+  block_end_string: "%}"
+  variable_start_string: "{{"
+  variable_end_string: "}}"
+
+# Project metadata
+project_name:
+  type: str
+  help: "Enter the project name"
+  default: "my-python-project"
+
+project_description:
+  type: str
+  help: "Enter the project description"
+  default: "A Python project using uv and devcontainer"
+
+author_name:
+  type: str
+  help: "Enter the author name"
+  default: "Your Name"
+
+author_email:
+  type: str
+  help: "Enter the author email address"
+  default: "your.email@example.com"
+
+python_version:
+  type: str
+  help: "Enter the Python version for your project (e.g., 3.11, 3.12, 3.13)"
+  default: "3.12"
+
+nodejs_version:
+  type: str
+  help: "Enter the Node.js version for development environment (e.g., 18, 20, 22, or 'latest' for auto-detection)"
+  default: "latest"
+
+use_cuda:
+  type: bool
+  help: "Enable CUDA (GPU) support?"
+  default: false
+
+cuda_version:
+  type: str
+  help: "Enter the CUDA version (e.g., 12.2, 11.8, 12.4)"
+  default: "12.2"
+  when: "{{ use_cuda }}"
+
+ubuntu_version:
+  type: str
+  help: "Enter the Ubuntu version for CUDA base image (e.g., 22.04, 20.04)"
+  default: "22.04"
+  when: "{{ use_cuda }}"
+
+base_image:
+  type: str
+  help: "Select the base image"
+  default: "{% if use_cuda %}nvidia/cuda:{{ cuda_version }}-devel-ubuntu{{ ubuntu_version }}{% else %}ghcr.io/astral-sh/uv:python3.12-bookworm-slim{% endif %}"
+  when: false  # This is computed automatically based on use_cuda
+
+license:
+  type: str
+  help: "Select the license"
+  default: "MIT"
+  choices:
+    - "MIT"
+    - "Apache-2.0"
+    - "GPL-3.0"
+    - "BSD-3-Clause"
+    - "None"
+
+_skip_if_exists:
+  - "README.md"
+
+_exclude:
+  - "*.pyc"
+  - "__pycache__/"
+  - ".git/"
+  - "tmp/"
+
+_tasks:
+  - "echo 'Project {{ project_name }} has been created from the template!'"
+  - "echo 'To start development with devcontainer, run \"Dev Containers: Reopen in Container\" in VS Code.'"
