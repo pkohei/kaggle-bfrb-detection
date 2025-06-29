@@ -1,255 +1,179 @@
-# bfrb
+# Kaggle BFRB Detection
 
-Body-focused repetitive bahaviors detection
+**Body-Focused Repetitive Behaviors (BFRB) 検出プロジェクト**
 
-## Development Environment Setup
+Kaggle競技における時系列センサーデータを使用したBFRB（身体集中反復行動）の多クラス分類タスクです。
 
-This project provides a development environment using DevContainer.
+## 🏆 競技情報
 
-### Prerequisites
+- **競技名**: [Child Mind Institute — Detect Sleep States](https://www.kaggle.com/competitions/child-mind-institute-detect-sleep-states)
+- **目標**: センサーデータから4つの行動クラスを分類
+- **評価**: テストセットでの分類精度
+- **データ**: 時系列センサーデータ
+
+## 🚀 クイックスタート
+
+### 1. 開発環境の起動
+
+```bash
+# VS Codeでプロジェクトを開く
+# コマンドパレット (Ctrl+Shift+P) から「Dev Containers: Reopen in Container」を実行
+```
+
+### 2. 依存関係のインストール
+
+```bash
+uv sync
+```
+
+### 3. Kaggle認証とデータダウンロード
+
+```bash
+uv run python scripts/setup_kaggle.py
+```
+
+### 4. ベースラインモデルの作成
+
+```bash
+# 高速ベースライン（推奨）
+uv run python scripts/create_quick_baseline.py
+
+# 包括的ベースライン
+uv run python scripts/create_baseline.py
+```
+
+## 📁 プロジェクト構造
+
+```
+kaggle-bfrb-detection/
+├── src/bfrb/              # コア機械学習モジュール
+├── scripts/               # 実験・セットアップスクリプト
+├── notebooks/             # Jupyter分析ノートブック
+├── data/                  # 競技データセット
+├── submissions/           # Kaggle提出ファイル
+├── results/               # モデル評価結果
+├── tests/                 # テストファイル
+├── .github/               # GitHub テンプレート
+├── pyproject.toml         # プロジェクト設定
+└── uv.lock               # 依存関係ロック
+```
+
+## 🔬 実験ワークフロー
+
+### Issue駆動実験管理
+
+1. **実験計画** - GitHub Issueで仮説と手法を定義
+2. **ブランチ作成** - `experiment/[issue番号]-[説明]`
+3. **実験実装** - スクリプトとノートブックで開発
+4. **結果Pull Request** - 可視化と分析を含むPR作成
+5. **レビューと統合** - 結果議論後にマージ
+
+### テンプレート
+
+- 実験Issue: `.github/ISSUE_TEMPLATE/experiment.md`
+- 実験PR: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
+
+## 🛠️ よく使うコマンド
+
+### データとモデル
+
+```bash
+# プロジェクト状況確認
+uv run python scripts/project_summary.py
+
+# クイックベースライン作成
+uv run python scripts/create_quick_baseline.py
+
+# 包括的ベースライン作成
+uv run python scripts/create_baseline.py
+```
+
+### 開発ツール
+
+```bash
+# テスト実行
+uv run pytest
+
+# コードフォーマット
+uv run ruff format
+
+# リンティング
+uv run ruff check --fix
+
+# 型チェック
+uv run mypy src
+```
+
+### パッケージ管理
+
+```bash
+# パッケージ追加
+uv add package-name
+
+# 開発パッケージ追加
+uv add --dev package-name
+
+# 依存関係更新
+uv lock --upgrade
+```
+
+## 🖥️ 開発環境
+
+### 必要要件
 
 - Docker
 - Visual Studio Code
 - Dev Containers extension
-- SSH agent running with keys loaded (for SSH functionality)
-- NVIDIA Docker (nvidia-container-toolkit)
+- NVIDIA Docker (GPU使用時)
 - NVIDIA GPU drivers
 
-### Starting the Development Environment
+### 技術スタック
 
-#### For CUDA Environment
+- **Python 3.12** - メイン言語
+- **uv** - 高速パッケージマネージャー
+- **scikit-learn, LightGBM, XGBoost** - 機械学習
+- **pandas, numpy** - データ処理
+- **matplotlib, seaborn, plotly** - 可視化
+- **pytest** - テスト
+- **Jupyter** - データ分析
 
-1. Verify that NVIDIA Docker is installed
-   ```bash
-   # Verify NVIDIA Docker installation
-   docker run --rm --gpus all nvidia/cuda:12.4-base-ubuntu22.04 nvidia-smi
-   ```
-
-2. Open the project in VS Code
-3. Open the Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
-4. Run "Dev Containers: Reopen in Container"
-
-Note: CUDA containers are large in size and may take time to build on the first run.
-
-### Dependency Management
-
-This project uses [uv](https://docs.astral.sh/uv/) to manage Python dependencies.
+### GPU/CUDA サポート
 
 ```bash
-# Install dependencies
-uv sync
-
-# Add new package
-uv add package-name
-
-# Add development package
-uv add --dev package-name
-
-# Update dependencies
-uv lock --upgrade
-```
-
-### Docker Optimization
-
-This project's Docker setup is optimized following official uv recommendations:
-
-- **Multi-stage builds**: Separate dependencies and project code for improved cache efficiency
-- **Bytecode compilation**: `UV_COMPILE_BYTECODE=1` for faster startup
-- **Cache mounts**: `--mount=type=cache` for faster build times
-- **Layer optimization**: Fast rebuilds when dependencies change infrequently
-
-### Running the Application
-
-```bash
-# Run the main module
-uv run python -m bfrb.main
-```
-
-
-### SSH Configuration and Git Access
-
-This project includes SSH agent forwarding for seamless Git operations with SSH keys.
-
-#### Setting up SSH Agent
-
-1. **Start SSH agent on your host machine:**
-   ```bash
-   # Start SSH agent (if not already running)
-   eval "$(ssh-agent -s)"
-
-   # Add your SSH key
-   ssh-add ~/.ssh/id_rsa  # or your specific key file
-
-   # Verify keys are loaded
-   ssh-add -l
-   ```
-
-2. **Verify SSH configuration in container:**
-   ```bash
-   # After opening in DevContainer, run the verification script
-   ./.devcontainer/ssh-setup.sh
-   ```
-
-3. **Using Git with SSH:**
-   ```bash
-   # Clone repositories using SSH URLs
-   git clone git@github.com:username/repository.git
-
-   # Your SSH keys are automatically available
-   # No need to copy private keys into the container
-   ```
-
-#### Troubleshooting SSH
-
-- **SSH agent not found:** Ensure SSH agent is running on host and keys are loaded
-- **Permission denied:** Verify your SSH key is added to GitHub/GitLab/etc.
-- **Socket issues:** Restart Docker Desktop or Docker daemon
-
-### Claude Code Integration and Conversation History
-
-This project includes Claude Code CLI with persistent conversation history across container rebuilds.
-
-#### Features
-
-- **Persistent History**: Claude Code conversations are preserved using Docker volumes
-- **Cache Persistence**: uv cache is also preserved for faster dependency installation
-- **Automatic Setup**: Claude Code configuration directory is automatically configured
-
-#### Using Claude Code
-
-1. **Start Claude Code in the container:**
-   ```bash
-   # Claude Code CLI is already installed and ready to use
-   claude
-   ```
-
-2. **Conversation History Location:**
-   - History is stored in `/home/vscode/.claude` (mounted as Docker volume)
-   - Your conversations persist even when rebuilding the container
-   - No need to manually backup or restore chat history
-
-#### Volume Management
-
-The project uses Docker Compose with named volumes for persistence:
-
-```yaml
-volumes:
-  uv-cache:       # Preserves uv dependency cache
-  claude-data:    # Preserves Claude Code conversation history
-```
-
-#### Troubleshooting Claude Code
-
-- **Permission issues:** The container automatically sets proper permissions on startup
-- **Missing history:** Ensure you're using the same Docker Compose project name
-- **Reset history:** Remove the `claude-data` volume: `docker volume rm <project>_claude-data`
-
-### Running Tests
-
-```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage report
-uv run pytest --cov
-
-# Run specific test file
-uv run pytest tests/test_main.py
-```
-
-
-### Code Formatting and Linting
-
-```bash
-# Format code
-uv run ruff format
-
-# Run linting
-uv run ruff check
-
-# Auto-fix linting errors
-uv run ruff check --fix
-```
-
-
-### Type Checking
-
-```bash
-# Run type checking
-uv run mypy src
-```
-
-### CUDA/GPU Usage
-
-This project provides a CUDA-enabled development environment.
-
-#### Checking GPU Information
-
-```bash
-# Check GPU information
+# GPU情報確認
 nvidia-smi
 
-# Check GPU in Python (PyTorch example)
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU count: {torch.cuda.device_count()}')"
+# GPU使用量監視
+watch -n 1 nvidia-smi
 ```
 
-#### Recommended Additional Packages
+## 📋 コード品質基準
 
-For machine learning/deep learning use cases, we recommend adding the following packages:
+### 本格コード (src/)
+- 完全な型ヒントと文書化
+- 包括的なテスト (80%以上カバレッジ)
+- 100% ruff/mypy準拠
 
-```bash
-# PyTorch (CUDA version) - Index URL adjusted based on CUDA version
-uv add torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+### 実験コード (scripts/, notebooks/)
+- 基本的な型ヒント
+- 機能テスト
+- ruffフォーマット必須
 
-# TensorFlow (GPU version)
-uv add tensorflow[and-cuda]
+## 🔧 トラブルシューティング
 
-# Other useful packages
-uv add numpy pandas matplotlib scikit-learn jupyter
+### よくある問題
 
-# CUDA-specific tools
-uv add cupy-cuda124x  # CuPy for GPU-accelerated NumPy
-```
+- **依存関係競合**: `uv lock --upgrade`
+- **インポートエラー**: 仮想環境確認
+- **Kaggle APIエラー**: 認証情報確認
+- **CUDA問題**: ホストCUDAバージョン確認
 
+### ヘルプリソース
 
-### Pre-commit Hooks
+- [uv ドキュメント](https://docs.astral.sh/uv/)
+- [Kaggle競技ディスカッション](https://www.kaggle.com/competitions/child-mind-institute-detect-sleep-states/discussion)
+- プロジェクト状況: `uv run python scripts/project_summary.py`
 
-```bash
-# Install pre-commit hooks
-uv run pre-commit install
+## 📄 ライセンス
 
-# Run hooks on all files
-uv run pre-commit run --all-files
-```
-
-### Production Deployment
-
-An optimized Dockerfile for production is also provided:
-
-```bash
-# Build production image
-docker build -f Dockerfile.production -t bfrb:production .
-
-# Run in production environment
-docker run -p 8000:8000 bfrb:production
-```
-
-## Project Structure
-
-```
-bfrb/
-├── .devcontainer/          # DevContainer configuration
-│   ├── devcontainer.json  # Dev Container settings
-│   └── Dockerfile         # Development Dockerfile
-├── src/
-│   └── bfrb/   # Main source code
-├── tests/                  # Test files
-├── pyproject.toml         # Project configuration and uv dependencies
-├── uv.lock               # Dependency lock file
-├── Dockerfile.production  # Production-optimized Dockerfile
-├── .dockerignore          # Docker build context exclusions
-└── README.md             # This file
-```
-
-## License
-This project is licensed under the MIT License.
+MIT License
