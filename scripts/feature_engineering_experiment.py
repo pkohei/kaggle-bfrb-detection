@@ -21,7 +21,7 @@ import pandas as pd
 from scipy import stats
 from scipy.fft import fft
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GroupKFold, StratifiedKFold
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
@@ -31,9 +31,62 @@ from bfrb.models import LightGBMModel
 class OptimizedFeatureExtractor:
     """技術調査結果に基づく最適化特徴量抽出器"""
 
-    def __init__(self):
-        self.sampling_rate = None
+    def __init__(self, sampling_rate=None, meta_columns=None):
+        self.sampling_rate = sampling_rate  # None=自動推定, 数値=指定値
         self.feature_names_ = []
+        self._estimated_sampling_rate = None
+
+        # デフォルトのメタデータ列名（設定可能）
+        self.meta_columns = meta_columns or [
+            "row_id",
+            "sequence_type",
+            "sequence_id",
+            "sequence_counter",
+            "subject",
+            "orientation",
+            "behavior",
+            "behavior_binary",
+            "phase",
+            "gesture",
+        ]
+
+    def _estimate_sampling_rate(self, df: pd.DataFrame) -> float:
+        """データからサンプリングレートを推定"""
+        if self.sampling_rate is not None:
+            return self.sampling_rate
+
+        if self._estimated_sampling_rate is not None:
+            return self._estimated_sampling_rate
+
+        # sequence_counterから推定
+        if "sequence_counter" in df.columns:
+            # 各シーケンス内でのカウンター差分を計算
+            seq_rates = []
+            for seq_id in df["sequence_id"].unique()[:5]:  # 最初の5シーケンス
+                seq_data = df[df["sequence_id"] == seq_id].sort_values(
+                    "sequence_counter"
+                )
+                if len(seq_data) > 1:
+                    counter_diffs = seq_data["sequence_counter"].diff().dropna()
+                    if len(counter_diffs) > 0:
+                        # カウンター差分の最頻値（通常は1）
+                        mode_diff = (
+                            counter_diffs.mode().iloc[0]
+                            if len(counter_diffs.mode()) > 0
+                            else 1
+                        )
+                        seq_rates.append(1.0 / mode_diff)  # 仮定：1秒間のカウンター増分
+
+            if seq_rates:
+                self._estimated_sampling_rate = np.median(seq_rates)
+            else:
+                self._estimated_sampling_rate = 1.0  # デフォルト
+        else:
+            # フォールバック: デフォルト値
+            self._estimated_sampling_rate = 1.0
+
+        print(f"推定サンプリングレート: {self._estimated_sampling_rate:.2f} Hz")
+        return self._estimated_sampling_rate
 
     def extract_time_window_features(
         self,
@@ -52,20 +105,8 @@ class OptimizedFeatureExtractor:
         window_size = max(1, window_size_samples)
         step_size = max(1, int(window_size * (1 - overlap_ratio)))
 
-        # センサー列を特定（実際のデータ構造に合わせて修正）
-        meta_cols = [
-            "row_id",
-            "sequence_type",
-            "sequence_id",
-            "sequence_counter",
-            "subject",
-            "orientation",
-            "behavior",
-            "behavior_binary",
-            "phase",
-            "gesture",
-        ]
-        sensor_cols = [col for col in df.columns if col not in meta_cols]
+        # センサー列を特定（設定可能なメタデータ列を除外）
+        sensor_cols = [col for col in df.columns if col not in self.meta_columns]
 
         features_list = []
 
@@ -141,18 +182,18 @@ class OptimizedFeatureExtractor:
         window_size_seconds: float = 5.0,
         overlap_ratio: float = 0.5,
     ) -> pd.DataFrame:
-        """周波数領域特徴量の抽出"""
-        if self.sampling_rate is None:
-            self.sampling_rate = 1.0
+        """
+        周波数領域特徴量の抽出
 
-        window_size = max(1, int(window_size_seconds * self.sampling_rate))
+        注意: 実験2で使用予定のメソッド（現在未使用）
+        """
+        sampling_rate = self._estimate_sampling_rate(df)
+
+        window_size = max(1, int(window_size_seconds * sampling_rate))
         step_size = max(1, int(window_size * (1 - overlap_ratio)))
 
-        sensor_cols = [
-            col
-            for col in df.columns
-            if col not in ["id", "target", "behavior", "timestamp"]
-        ]
+        # 周波数領域用のセンサー列を特定
+        sensor_cols = [col for col in df.columns if col not in self.meta_columns]
 
         features_list = []
 
@@ -184,7 +225,7 @@ class OptimizedFeatureExtractor:
                         # 支配周波数
                         dominant_freq_idx = np.argmax(fft_values)
                         window_features[f"{col}_dominant_freq"] = (
-                            dominant_freq_idx * self.sampling_rate / len(values)
+                            dominant_freq_idx * sampling_rate / len(values)
                         )
 
                         # スペクトルエントロピー（簡易版）
@@ -208,18 +249,18 @@ class OptimizedFeatureExtractor:
         window_size_seconds: float = 5.0,
         overlap_ratio: float = 0.5,
     ) -> pd.DataFrame:
-        """動的特徴量の抽出"""
-        if self.sampling_rate is None:
-            self.sampling_rate = 1.0
+        """
+        動的特徴量の抽出
 
-        window_size = max(1, int(window_size_seconds * self.sampling_rate))
+        注意: 実験3で使用予定のメソッド（現在未使用）
+        """
+        sampling_rate = self._estimate_sampling_rate(df)
+
+        window_size = max(1, int(window_size_seconds * sampling_rate))
         step_size = max(1, int(window_size * (1 - overlap_ratio)))
 
-        sensor_cols = [
-            col
-            for col in df.columns
-            if col not in ["id", "target", "behavior", "timestamp"]
-        ]
+        # 動的特徴量用のセンサー列を特定
+        sensor_cols = [col for col in df.columns if col not in self.meta_columns]
 
         features_list = []
 
@@ -298,18 +339,33 @@ class ExperimentRunner:
             df["behavior_binary"] = df["behavior"].apply(
                 lambda x: 1 if x in bfrb_behaviors else 0
             )
-            binary_dist = df['behavior_binary'].value_counts().to_dict()
+            binary_dist = df["behavior_binary"].value_counts().to_dict()
             print(f"バイナリbehavior分布: {binary_dist}")
 
-        # trainとtestに分割（仮）
-        if "behavior_binary" in df.columns:
-            # 80/20で分割
+        # sequence_id基準でtrain/testに分割（データリーク防止）
+        if "sequence_id" in df.columns:
+            unique_sequences = df["sequence_id"].unique()
+            np.random.seed(42)  # 再現性のため
+            np.random.shuffle(unique_sequences)
+
+            # 80/20でsequence_idを分割
+            train_size = int(0.8 * len(unique_sequences))
+            train_sequences = unique_sequences[:train_size]
+            test_sequences = unique_sequences[train_size:]
+
+            train_df = df[df["sequence_id"].isin(train_sequences)].copy()
+            test_df = df[df["sequence_id"].isin(test_sequences)].copy()
+
+            print(
+                f"Train sequences: {len(train_sequences)}, "
+                f"Test sequences: {len(test_sequences)}"
+            )
+            print(f"Train samples: {len(train_df)}, Test samples: {len(test_df)}")
+        else:
+            # フォールバック: 時系列順分割
             train_size = int(0.8 * len(df))
             train_df = df.iloc[:train_size].copy()
             test_df = df.iloc[train_size:].copy()
-        else:
-            train_df = df.copy()
-            test_df = df.copy()
 
         return train_df, test_df
 
@@ -320,7 +376,7 @@ class ExperimentRunner:
         print("\n=== 実験1A: 最適時間窓パラメータ決定 ===")
         print(f"データサイズ: {train_df.shape}")
         print(f"behavior分布: {train_df['behavior'].value_counts().to_dict()}")
-        binary_dist = train_df['behavior_binary'].value_counts().to_dict()
+        binary_dist = train_df["behavior_binary"].value_counts().to_dict()
         print(f"behavior_binary分布: {binary_dist}")
 
         # パラメータ候補（サンプル数ベース、より小さな値で開始）
@@ -331,13 +387,28 @@ class ExperimentRunner:
         best_score = 0
         results = {}
 
-        # データのサブサンプル（高速化、但し複数シーケンスを含むように）
-        sample_sequences = train_df["sequence_id"].unique()[:20]  # 最初の20シーケンス
+        # 代表的サブサンプリング（高速化、ランダムサンプリング）
+        np.random.seed(42)  # 再現性のため
+
+        # 各behavior_binaryの比率を保持したサンプリング
+        sample_sequences = []
+        for behavior in [0, 1]:
+            behavior_sequences = train_df[
+                train_df["behavior_binary"] == behavior
+            ]["sequence_id"].unique()
+            n_sample = min(10, len(behavior_sequences))  # 各クラスから最大10シーケンス
+            if len(behavior_sequences) > 0:
+                sampled = np.random.choice(
+                    behavior_sequences, size=n_sample, replace=False
+                )
+                sample_sequences.extend(sampled)
+
         sample_df = train_df[
             train_df["sequence_id"].isin(sample_sequences)
         ].reset_index(drop=True)
         print(f"サンプルデータサイズ: {sample_df.shape}")
-        sample_binary_dist = sample_df['behavior_binary'].value_counts().to_dict()
+        print(f"サンプル対象シーケンス数: {len(sample_sequences)}")
+        sample_binary_dist = sample_df["behavior_binary"].value_counts().to_dict()
         print(f"サンプルbehavior_binary分布: {sample_binary_dist}")
 
         for window_size in window_sizes:
@@ -376,11 +447,22 @@ class ExperimentRunner:
                     # 簡易モデルで評価
                     model = LightGBMModel(n_estimators=50, verbose=-1, random_state=42)
 
-                    # クロスバリデーション
+                    # 時系列対応クロスバリデーション（sequence_idベース）
                     cv_scores = []
-                    skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-                    for train_idx, val_idx in skf.split(X, y):
+                    # sequence_idをグループとして使用（データリーク防止）
+                    if "sequence_id" in features_df.columns:
+                        groups = features_df["sequence_id"]
+                        gkf = GroupKFold(n_splits=3)
+                        cv_splitter = gkf.split(X, y, groups=groups)
+                    else:
+                        # フォールバック：shuffle=Falseでデータリーク防止
+                        skf = StratifiedKFold(
+                            n_splits=3, shuffle=False, random_state=42
+                        )
+                        cv_splitter = skf.split(X, y)
+
+                    for train_idx, val_idx in cv_splitter:
                         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
                         y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
 
