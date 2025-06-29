@@ -114,6 +114,9 @@ def prepare_features(
         class_mapping = dict(zip(le.classes_, le.transform(le.classes_), strict=False))
         print(f"クラスマッピング: {class_mapping}")
 
+    # 型を明示的にndarray[int]にキャスト
+    y = np.asarray(y, dtype=np.int32)
+
     # 欠損値チェック
     missing_count = np.isnan(X).sum()
     if missing_count > 0:
@@ -225,7 +228,7 @@ def train_lightgbm(
 
 
 def evaluate_model(
-    model, X_val: np.ndarray, y_val: np.ndarray, class_names: list[str] = None
+    model, X_val: np.ndarray, y_val: np.ndarray, class_names: list[str] | None = None
 ) -> dict[str, Any]:
     """詳細なモデル評価"""
     y_pred = model.predict(X_val)
@@ -253,7 +256,7 @@ def evaluate_model(
 
 
 def create_submission(
-    model, X_test: np.ndarray, test_df: pd.DataFrame, algorithm_name: str
+    model: Any, X_test: np.ndarray, test_df: pd.DataFrame, algorithm_name: str
 ) -> str:
     """提出ファイルを作成"""
     predictions = model.predict(X_test)
@@ -287,7 +290,7 @@ def create_submission(
     return str(filepath)
 
 
-def plot_results(results: list[dict[str, Any]], output_dir: Path):
+def plot_results(results: list[dict[str, Any]], output_dir: Path) -> None:
     """結果を可視化"""
     algorithms = [r["algorithm"] for r in results]
     accuracies = [r["accuracy"] for r in results]
@@ -335,7 +338,7 @@ def plot_results(results: list[dict[str, Any]], output_dir: Path):
 
 def save_results(
     results: list[dict[str, Any]], feature_cols: list[str], output_dir: Path
-):
+) -> None:
     """結果を保存"""
     # メタデータを追加
     summary = {
@@ -353,7 +356,7 @@ def save_results(
     print(f"結果保存: {output_dir / 'full_dataset_results.json'}")
 
 
-def main():
+def main() -> None:
     """メイン処理"""
     print("🚀 全データセット学習実験開始")
     print("=" * 50)
