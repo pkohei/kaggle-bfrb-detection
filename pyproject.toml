@@ -16,19 +16,12 @@ dependencies = [
     "numpy>=2.3.1",
     "pandas>=2.3.0",
     "plotly>=6.2.0",
+    "pyarrow>=20.0.0",
     "scikit-learn>=1.7.0",
     "seaborn>=0.13.2",
     "xgboost>=3.0.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-    "pre-commit>=3.5.0",
-]
 
 
 [build-system]
@@ -51,6 +44,16 @@ select = [
 ]
 ignore = []
 
+[tool.ruff.lint.isort]
+# import順序の詳細設定
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = ["bfrb"]
+# 強制的に空行を分割
+force-single-line = false
+force-sort-within-sections = true
+# より読みやすいimport形式
+combine-as-imports = true
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -62,6 +65,12 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# 実験用スクリプトディレクトリと外部ファイルを除外
+exclude = [
+    "scripts/.*",
+    "notebooks/.*",
+    "data/.*",
+]
 
 # 個別ライブラリの型チェック無効化
 [[tool.mypy.overrides]]
@@ -82,6 +91,11 @@ addopts = "--cov=bfrb --cov-report=term-missing --cov-report=html"
 
 [dependency-groups]
 dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
     "pandas-stubs>=2.2.3.250527",
     "types-seaborn>=0.13.2.20250516",
 ]

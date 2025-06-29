@@ -55,14 +55,14 @@ uv run python scripts/create_baseline.py
 ### パッケージ管理
 
 ```bash
-# 依存関係のインストール
+# 依存関係のインストール（devグループも自動的に含まれる）
 uv sync
 
 # 新しいパッケージの追加
 uv add package-name
 
-# 開発パッケージの追加
-uv add --dev package-name
+# 開発パッケージの追加（dependency-groups使用）
+uv add --group dev package-name
 
 # 依存関係の更新
 uv lock --upgrade
@@ -94,6 +94,9 @@ uv run ruff check
 
 # リンティングエラーの自動修正
 uv run ruff check --fix
+
+# インポート順序の自動整理
+uv run ruff check --select I --fix
 ```
 
 ### 型チェック

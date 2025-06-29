@@ -5,10 +5,10 @@ from typing import Any, Protocol
 
 import lightgbm as lgb
 import numpy as np
-import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+import xgboost as xgb
 
 
 class MLModel(Protocol):
