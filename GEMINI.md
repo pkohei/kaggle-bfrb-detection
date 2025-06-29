@@ -30,3 +30,21 @@
 - `tests/`: `src`コードのユニット・統合テスト
 - `pyproject.toml`: `uv`で管理されたプロジェクトメタデータと依存関係
 - `compose.yml`: 開発環境用Docker Compose設定
+
+## 3. コマンド
+
+IssueやPRの閲覧が必要な場合
+
+```bash
+# IssueのTitleとBodyのみ
+gh issue view {issue-number}
+
+# Issueのコメント含む
+gh issue view {issue-number} --comments
+
+# PRのTitleとBodyのみ
+gh pr view {pr-number}
+
+# PRのコメント含む
+gh pr view {pr-number} --comments
+```
