@@ -22,14 +22,6 @@ dependencies = [
     "xgboost>=3.0.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-    "pre-commit>=3.5.0",
-]
 
 
 [build-system]
@@ -99,6 +91,11 @@ addopts = "--cov=bfrb --cov-report=term-missing --cov-report=html"
 
 [dependency-groups]
 dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
     "pandas-stubs>=2.2.3.250527",
     "types-seaborn>=0.13.2.20250516",
 ]
