@@ -54,7 +54,15 @@ class ModelEvaluator:
         }
 
         if y_prob is not None:
-            metrics["auc"] = roc_auc_score(y, y_prob)
+            try:
+                # Multi-class AUC
+                if len(np.unique(y)) > 2:
+                    metrics["auc"] = roc_auc_score(y, y_prob, multi_class="ovr")
+                else:
+                    metrics["auc"] = roc_auc_score(y, y_prob)
+            except Exception:
+                # Skip AUC if it fails
+                pass
 
         # Confusion matrix
         cm = confusion_matrix(y, y_pred)

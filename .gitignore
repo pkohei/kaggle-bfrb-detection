@@ -1,3 +1,12 @@
+data/*
+!data/README.md
+models/*
+!models/README.md
+results/*
+!results/README.md
+submissions/*
+!submissions/README.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
