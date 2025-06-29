@@ -1,76 +1,32 @@
-# Gemini Project Context: Kaggle BFRB Detection
+# Gemini プロジェクトコンテキスト: Kaggle BFRB検出
 
-This document provides context for the "Kaggle BFRB Detection" project to help Gemini assist with development.
+このドキュメントは、Geminiが開発を支援するための「Kaggle BFRB検出」プロジェクトのコンテキストを提供します。
 
-## 1. Project Overview
+## 0. Geminiが本プロジェクトで果たすべき役割
 
-This is a machine learning project for a Kaggle competition focused on Body-Focused Repetitive Behaviors (BFRB) detection. The goal is to perform multi-class classification on time-series sensor data to identify four different behavior classes.
+あなたには以下の2つの役割があります。
 
-- **Competition:** [Child Mind Institute — Detect Sleep States](https://www.kaggle.com/competitions/child-mind-institute-detect-sleep-states)
-- **Core Task:** Time-series classification.
-- **Primary Metric:** Classification accuracy.
+1. 技術調査員
+    - データサイエンス、機械学習、数学、その他科学技術に長けた調査員として徹底的に技術を調査してユーザーの実験をサポートする
+2. 実験レビュワー
+    - データサイエンス、機械学習、数学などの科学技術とソフトウェア工学に長けたリーダーとして、実験コードや実験結果をレビューして適切なアドバイスを行う
 
-## 2. Tech Stack
+## 1. プロジェクト概要
 
-- **Language:** Python 3.12
-- **Package Manager:** `uv`
-- **ML Libraries:** `scikit-learn`, `lightgbm`, `xgboost`
-- **Data Manipulation:** `pandas`, `numpy`, `pyarrow`
-- **Visualization:** `matplotlib`, `seaborn`, `plotly`
-- **Testing:** `pytest`
-- **Linting/Formatting:** `ruff`
-- **Type Checking:** `mypy`
-- **Environment:** Docker, VS Code Dev Containers
+これは、Body-Focused Repetitive Behaviors（BFRB）検出に焦点を当てたKaggleコンペティション用の機械学習プロジェクトです。目標は、時系列センサーデータに対してマルチクラス分類を実行し、4つの異なる行動クラスを識別することです。
 
-## 3. Project Structure
+- **コンペティション:** [Child Mind Institute — Detect Sleep States](https://www.kaggle.com/competitions/child-mind-institute-detect-sleep-states)
+- **コアタスク:** 時系列分類
+- **主要評価指標:** 分類精度
 
-- `src/bfrb/`: Core, production-quality machine learning source code.
-- `scripts/`: Scripts for experiments, data processing, and utilities.
-- `notebooks/`: Jupyter notebooks for exploration and analysis.
-- `data/`: Raw and processed competition data.
-- `submissions/`: Files generated for Kaggle submissions.
-- `results/`: Model evaluation outputs and summaries.
-- `tests/`: Unit and integration tests for the `src` code.
-- `pyproject.toml`: Project metadata and dependencies managed with `uv`.
-- `compose.yml`: Docker Compose configuration for the development environment.
+## 2. プロジェクト構造
 
-## 4. Key Workflows & Commands
-
-The project uses `uv` as a task runner.
-
-- **Install dependencies:** `uv sync`
-- **Run tests:** `uv run pytest`
-- **Format code:** `uv run ruff format`
-- **Lint code:** `uv run ruff check --fix`
-- **Type check:** `uv run mypy src`
-- **Create a quick baseline model:** `uv run python scripts/create_quick_baseline.py`
-- **Run a full training pipeline:** `uv run python scripts/train_full_dataset.py`
-- **Check project summary:** `uv run python scripts/project_summary.py`
-
-## 5. Code Quality Standards
-
-- **`src/` directory:**
-    - Must have full type hints and docstrings.
-    - Requires comprehensive tests (target >80% coverage).
-    - Must pass all `ruff` and `mypy` checks.
-- **`scripts/` and `notebooks/`:**
-    - Basic type hints and functional tests are encouraged.
-    - Must be formatted with `ruff format`.
-
-## 6. Experimentation Process
-
-The project follows an issue-driven approach for managing experiments:
-1.  **Plan:** Define a hypothesis in a GitHub Issue.
-2.  **Branch:** Create a branch named `experiment/[issue-number]-[description]`.
-3.  **Implement:** Develop the experiment in the `scripts` or `notebooks` directory.
-4.  **Report:** Create a Pull Request with results, analysis, and visualizations.
-5.  **Merge:** Review and merge the results into the main branch.
-
-## 7. How Gemini Should Assist
-
-- **Adhere to Conventions:** Follow the existing coding style, especially the `ruff` and `mypy` configurations in `pyproject.toml`.
-- **Use `uv`:** Use `uv run` for executing scripts and tools as defined in `README.md`.
-- **Respect Code Tiers:** Apply strict quality standards for code in `src/` and more relaxed standards for `scripts/` and `notebooks/`.
-- **Focus on Automation:** Help automate repetitive tasks, such as running experiments, processing data, and generating submission files.
-- **Understand the Goal:** Keep the primary objective—improving classification accuracy for the Kaggle competition—in mind when providing suggestions or writing code.
-- **Testing:** When adding or modifying code in `src/`, corresponding tests in `tests/` should be added or updated.
+- `src/bfrb/`: コア、本番品質の機械学習ソースコード
+- `scripts/`: 実験、データ処理、ユーティリティのためのスクリプト
+- `notebooks/`: 探索と分析のためのJupyterノートブック
+- `data/`: 生データと処理済みコンペティションデータ
+- `submissions/`: Kaggle提出用に生成されたファイル
+- `results/`: モデル評価出力とサマリー
+- `tests/`: `src`コードのユニット・統合テスト
+- `pyproject.toml`: `uv`で管理されたプロジェクトメタデータと依存関係
+- `compose.yml`: 開発環境用Docker Compose設定
