@@ -94,6 +94,9 @@ uv run ruff check
 
 # リンティングエラーの自動修正
 uv run ruff check --fix
+
+# インポート順序の自動整理
+uv run ruff check --select I --fix
 ```
 
 ### 型チェック

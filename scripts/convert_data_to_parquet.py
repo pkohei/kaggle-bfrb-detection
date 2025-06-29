@@ -9,8 +9,8 @@ CSVファイルをParquet形式に変換してデータ読み込みを高速化�
 - 読み込み速度ベンチマーク
 """
 
-import time
 from pathlib import Path
+import time
 from typing import Any
 
 import numpy as np

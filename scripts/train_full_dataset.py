@@ -11,11 +11,11 @@
 """
 
 import json
+from pathlib import Path
 import sys
 import time
-import warnings
-from pathlib import Path
 from typing import Any
+import warnings
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt

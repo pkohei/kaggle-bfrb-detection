@@ -1,8 +1,8 @@
 """Kaggle API utilities for CMI competition."""
 
 import os
-import zipfile
 from pathlib import Path
+import zipfile
 
 import kaggle
 import pandas as pd

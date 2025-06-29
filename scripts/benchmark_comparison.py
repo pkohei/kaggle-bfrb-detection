@@ -4,8 +4,8 @@
 """
 
 import json
-import time
 from pathlib import Path
+import time
 
 import matplotlib.pyplot as plt
 import pandas as pd
