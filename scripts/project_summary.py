@@ -24,7 +24,9 @@ def main() -> None:
             behavior_counts = train_df["behavior"].value_counts()
             print(f"   • Target classes: {len(behavior_counts)}")
             for behavior, count in behavior_counts.items():
-                print(f"     - {behavior}: {count:,} ({count/len(train_df)*100:.1f}%)")
+                print(
+                    f"     - {behavior}: {count:,} ({count / len(train_df) * 100:.1f}%)"
+                )
     except Exception as e:
         print(f"   ⚠️  Error loading data: {e}")
 

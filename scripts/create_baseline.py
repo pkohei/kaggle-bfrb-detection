@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Create baseline model for BFRB detection competition."""
 
-
 import numpy as np
 import pandas as pd
 from bfrb.evaluation import ModelEvaluator, SubmissionGenerator
