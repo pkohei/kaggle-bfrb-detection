@@ -2,55 +2,73 @@
 
 このファイルは、Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
+## 原則
+
+**以下の原則に必ず従ってください。**
+
+<law>
+Claude原則
+1. Claudeはあらゆる作業の実行前に必ずCLAUDE.mdを読み返す
+2. Claudeはすべてのチャットの冒頭にこの原則を逐語的に必ず画面出力してから対応する
+</law>
+
+<every_chat>
+[Claude原則]
+
+[main_output]
+
+#[n] times. # n = increment each chat, end line, etc(#1, #2...)
+</every_chat>
+
 ## プロジェクト概要
 
-これは **Kaggle競技プロジェクト** で、GitHub IssueとPull Requestを活用した構造化実験ワークフローによるBFRB（Body-Focused Repetitive Behaviors）検出を行います：
-- **uv**: 高速な依存関係解決と管理のためのモダンなPythonパッケージマネージャー
-- **Docker**: コンテナ化された開発環境
-- **Dev Containers**: シームレスなコンテナベース開発のためのVS Code統合
-- **CUDA対応**: 機械学習ワークロードのためのGPUコンピューティングサポート
+本プロジェクトはKaggleコンペティションにおいてBFRB（Body-Focused Repetitive Behaviors）検出を行うものです。
 
-### プロジェクトの説明
+URL: https://www.kaggle.com/competitions/cmi-detect-behavior-with-sensor-data
 
-**Kaggle競技**: センサーデータを使用したBody-focused repetitive behaviors検出
-- **目標**: 行動パターンの多クラス分類
-- **データ**: 4つの行動クラスを持つ時系列センサーデータ
-- **評価**: テストセットでの分類精度
-- **ワークフロー**: PRベースの結果レビューを伴うIssue駆動実験開発
+## 実験ワークフロー
 
-## 開発環境
+Claudeが実験するときはこのワークフローに従う必要がある。
+実験ワークフローは3つのフェーズと、各フェーズ内の複数ステップから構成される。
+Gemini CLIに依頼する際は「Gemini CLI 依頼ガイド」を参照すること。
 
-このプロジェクトは、マシン間での一貫した開発環境のためにDevContainerを使用します。
+### 1. 実験計画フェーズ
 
-### クイックスタート
+1. 技術調査をGemini CLIに依頼する
+2. 調査結果に基づいて実験計画を考え、ユーザーに提示する
+3. 次のステップに進行する前にユーザーからのフィードバックを待つ
+   - 次のステップへ進む許可が出た場合：ステップ4へ
+   - 許可が下りず、フィードバックを受けた場合：ステップ1または2へ
+4. 実験テンプレート (`.github/ISSUE_TEMPLATE/experiment.md`) を使用してGitHub Issueを作成
+5. ユーザーに実験計画が完了したことを伝える
 
-1. VS Codeでプロジェクトを開く
-2. コマンドパレットから「Dev Containers: Reopen in Container」を実行
-3. 依存関係をインストール: `uv sync`
-4. Kaggle認証情報を設定してデータをダウンロード: `uv run python scripts/setup_kaggle.py`
-5. ベースラインモデルを作成: `uv run python scripts/create_quick_baseline.py`
+### 2. 実験準備フェーズ
 
-## Kaggle競技コマンド
+1. mainブランチをチェックアウトして最新の変更を取得: `git pull origin main`
+2. 現在のブランチ状況を確認する
+3. 必要に応じて実験ブランチを作成: `git checkout -b experiment/[issue番号]-[簡潔な説明]`
+4. ユーザーに実験準備が完了したことを伝える
 
-### セットアップとデータ管理
+### 3. 実験フェーズ
 
-```bash
-# Kaggle環境のセットアップと競技データのダウンロード
-uv run python scripts/setup_kaggle.py
+1. Issueの計画にしたがって実験を実装し、実装内容をコミットする
+2. 実装した実験コードについてGemini CLIに実験コードレビューを要求する
+3. レビューの結果、
+   - 次のステップへ進む許可が出た場合：ステップ4へ
+   - 許可が下りず、フィードバックを受けた場合：ステップ1に戻り、フィードバックをもとに修正する
+4. 実験コードを実行する
+5. 出力された実験結果についてGemini CLIに実験結果レビューを要求する
+6. レビューの結果、
+   - 次のステップへ進む許可が出た場合：ステップ7へ進む
+   - 許可が下りず、フィードバックを受けた場合：ステップ1あるいはステップ4へ戻り、フィードバックをもとに修正する
+7. ユーザーに実験コードの内容と実験結果を伝えてフィードバックを待つ
+   - 次のステップへ進む許可が出た場合：ステップ8へ
+   - 許可が下りず、フィードバックを受けた場合：ステップ1または4に戻り、フィードバックをもとに修正する
+8. 実験結果テンプレート (`.github/PULL_REQUEST_TEMPLATE/experiment_results.md`) を使用してPRを作成する
+9. ユーザーに実験が完了し、PRが作成されたことを伝える
 
-# プロジェクトの状況とデータサマリーの確認
-uv run python scripts/project_summary.py
-```
 
-### モデル開発
-
-```bash
-# クイックベースラインモデルの作成（高速イテレーション推奨）
-uv run python scripts/create_quick_baseline.py
-
-# 複数アルゴリズムによる包括的ベースラインの作成
-uv run python scripts/create_baseline.py
-```
+## コマンド
 
 ### パッケージ管理
 
@@ -116,194 +134,8 @@ uv run pre-commit install
 uv run pre-commit run --all-files
 ```
 
-## プロジェクトアーキテクチャ
 
-### ディレクトリ構造
-
-- **ソースコード**: `src/bfrb/` - コアMLモジュール（モデル、評価、データ処理）
-- **スクリプト**: `scripts/` - 実験とセットアップのための実行可能スクリプト
-- **ノートブック**: `notebooks/` - データ探索と実験のためのJupyterノートブック
-- **データ**: `data/` - 競技データセット（train.csv、test.csvなど）
-- **提出**: `submissions/` - Kaggle用に生成された提出ファイル
-- **結果**: `results/` - モデル評価結果とプロット
-- **テスト**: `tests/` - pytestを使用したテストファイル
-- **設定**: `pyproject.toml` - プロジェクト設定と依存関係
-- **依存関係**: `uv.lock` - 再現可能なビルドのための依存関係ロックファイル
-- **GitHubテンプレート**: `.github/` - 構造化ワークフローのためのIssueとPRテンプレート
-
-### 主要技術
-
-- **Python 3.12**: プログラミング言語
-- **uv**: 高速Pythonパッケージマネージャー
-- **scikit-learn, LightGBM, XGBoost**: 機械学習アルゴリズム
-- **pandas, numpy**: データ操作と数値計算
-- **matplotlib, seaborn, plotly**: データ可視化
-- **pytest**: テストフレームワーク
-- **ruff**: コードフォーマッターとリンター
-- **mypy**: 静的型チェッカー
-- **pre-commit**: コード品質のためのGitフック
-- **Jupyter**: インタラクティブデータ分析
-- **Kaggle API**: 競技データと提出管理
-
-## 実験ワークフロー
-
-### Issue駆動実験管理
-
-**ユーザーから特に指定がない限り、実験開発では以下のワークフローに従ってください**
-
-1. **実験計画（GitHub Issue）** - **Gemini CLI推奨**
-   - **Gemini活用判断**: 技術調査、手法比較、包括的な実験設計が必要な場合は積極的に活用
-   - **必須手順**: Gemini CLI使用前に専用ドキュメント（gemini-templates.md、gemini-tool-selection.md）を参照し、適切な指示構成を準備
-   - 実験テンプレートを使用してGitHub Issueを作成: `.github/ISSUE_TEMPLATE/experiment.md`
-   - **Gemini活用例**: 最新手法の調査、実験アプローチの妥当性検証、リスク分析
-   - 仮説、手法、成功基準、予想スケジュールを定義
-   - ベースライン比較と評価指標を含める
-   - 実験アプローチについて承認/議論を得る
-
-2. **実験セットアップ**
-   - **Gemini活用判断**: 通常は不要（定型的な作業のため）
-   - mainブランチをチェックアウトして最新の変更を取得: `git pull origin main`
-   - 実験ブランチを作成: `git checkout -b experiment/[issue番号]-[簡潔な説明]`
-   - 追跡可能性のためブランチ名にissue番号を含める
-
-3. **実験開発**
-   - **Gemini活用判断**: 複雑な実装方針や設計判断が必要な場合に活用検討
-   - Issueの計画に従って実験を実装
-   - **Gemini活用例**: 実装アプローチの最適化、コード設計のレビュー
-   - 再現性のため`scripts/`でスクリプトを作成または修正
-   - 明確な結果とともにJupyterノートブックで実験を文書化
-   - issueを参照する意味のあるメッセージでコミット
-
-4. **実験実行と文書化** - **Gemini CLI推奨**
-   - **Gemini活用判断**: 結果の解釈、異常値の分析、洞察の発見で強く推奨
-   - **必須手順**: Gemini CLI使用前にgemini-templates.md（調査・研究タスク用）を参照し、結果分析に適した指示構成を準備
-   - 実験を実行して結果を収集
-   - **Gemini活用例**: 実験結果の包括的分析、予期しない結果の解釈、改善提案
-   - 可視化と性能指標を生成
-   - 発見、洞察、次のステップを文書化
-   - 該当する場合は提出ファイルを作成
-
-5. **結果を含むPull Request** - **Gemini CLI推奨**
-   - **Gemini活用判断**: 実験結果の総合評価とプレゼンテーション改善で推奨
-   - **必須手順**: gemini-templates.md（分析・レビュータスク用）を確認し、包括的な分析指示を構成
-   - 実験結果テンプレートを使用してPRを作成: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
-   - **Gemini活用例**: 結果サマリーの最適化、発見事項の構造化、次のステップ提案
-   - 実験結果、可視化、分析を含める
-   - 主要な発見と推奨事項をまとめる
-   - 文脈のため元のIssueにリンク
-
-6. **レビューと統合**
-   - **Gemini活用判断**: 通常は不要（対人コミュニケーションが中心のため）
-   - レビューフィードバックと質問に対応
-   - レビュワーと結果と影響について議論
-   - 承認後にPRをマージし、関連Issueをクローズ
-   - mainブランチを更新し、実験ブランチをクリーンアップ
-
-#### Gemini CLI活用のクイック判断基準
-- **積極的に活用**: 技術調査、結果分析、包括的レビューが必要なタスク
-- **活用検討**: 複雑な判断や設計が必要なタスク
-- **通常不要**: 定型作業、対人コミュニケーション、単純なコード修正
-
-### テンプレート
-
-- **実験Issueテンプレート**: `.github/ISSUE_TEMPLATE/experiment.md`
-- **実験PRテンプレート**: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
-
-### 言語規約
-
-**IssueとPRは日本語で記述してください**
-- タイトル、説明、コメントすべて日本語で記述
-- コード内のコメントとdocstringも日本語推奨
-- 変数名や関数名は英語のまま（Python慣例に従う）
-
-## コード品質ガイドライン
-
-### 実験コード基準
-
-**本格コード** (src/bfrb/)：
-- 完全な型ヒントと文書化
-- 包括的なユニットテスト
-- 100% ruff/mypy準拠
-- 徹底したエラーハンドリング
-
-**実験コード** (scripts/, notebooks/)：
-- 主要関数の基本的な型ヒント
-- メインワークフローの機能テスト
-- ruffフォーマット必須、mypyの警告は許容
-- 明確なコメントと文書化
-
-**共通基準**:
-- コードフォーマットには`ruff format`を使用
-- ruffリンティングルールに従う（`ruff check`）
-- コミット前に`mypy`を実行（実験では警告OK）
-- Python命名規則に従う（PEP 8）
-- パブリック関数とクラスにdocstringを記述
-
-### 実験ベストプラクティス
-
-- **再現性**: ランダムシードを設定し、すべてのパラメータを文書化
-- **バージョン管理**: 明確で説明的なメッセージで実験コードをコミット
-- **文書化**: 探索的分析と結果にJupyterノートブックを使用
-- **性能追跡**: 検証スコアを監視し、実験履歴を追跡
-- **リソース管理**: 計算要件と実行時間を文書化
-
-### テスト要件
-
-**本格コード**:
-- 包括的なユニットテストを記述
-- テストカバレッジ80%以上を維持
-- エッジケースとエラー条件をテスト
-
-**実験コード**:
-- メイン実行パスをテスト
-- データ処理パイプラインを検証
-- 主要な結果の再現性を確保
-
-## CUDA/GPU開発
-
-このプロジェクトは、CUDA 12.4によるGPUコンピューティング用に設定されています。
-
-### GPU情報
-
-```bash
-# GPUステータスの確認
-nvidia-smi
-```
-
-### GPU対応トレーニング
-
-```bash
-# ほとんどのMLフレームワークは利用可能な場合自動的にGPUを使用
-# トレーニング中のGPU使用量監視
-watch -n 1 nvidia-smi
-```
-
-## トラブルシューティング
-
-### 一般的な問題
-
-1. **依存関係の競合**: `uv lock --upgrade`で解決
-2. **インポートエラー**: 正しい仮想環境にいることを確認
-3. **CUDAバージョンの不一致**: ホストCUDAバージョンの互換性を確認
-4. **Kaggle APIエラー**: 認証情報と競技参加を確認
-5. **メモリ問題**: 大きなデータセットにはデータサンプリングまたはバッチ処理を使用
-
-### 実験の問題
-
-1. **再現性の問題**: ランダムシードと環境の一貫性を確認
-2. **性能の後退**: 同じ検証セットを使用してベースラインと比較
-3. **リソース制約**: 実験中のメモリ/GPU使用量を監視
-4. **データリーク**: 適切なtrain/validation/testの分割を確認
-
-### ヘルプを得る
-
-- uvドキュメントのレビュー: https://docs.astral.sh/uv/
-- Kaggle競技ディスカッションフォーラムの確認
-- scripts/README.mdで詳細なコマンド使用法をレビュー
-- プロジェクト状況確認: `uv run python scripts/project_summary.py`
-- 実験計画と議論のためのGitHub Issue作成
-
-## Gemini CLI 連携ガイド
+## Gemini CLI 依頼ガイド
 
 ### 概要
 
@@ -333,24 +165,33 @@ Gemini CLIは以下の特徴を持つAI Agentです。
 gemini -p "指示内容"
 ```
 
+### 注意点
 
-### 重要な特性
-- **会話記憶なし** - コマンド実行ごとにすべてを忘却、毎回完全な指示が必要
-- **作業制約の明記** - 「作業はしないでください」で不可逆な作業を防止
-- **安全実行モード** - `--yolo`オプションで全コマンド実行を許可可能
+- Gemini CLIは会話を保存せず、コマンドごとに記憶がリセットされる。一問一答となるよう心掛ける。
+- Gemini CLIが自動で実行できるコマンドは限られるので、不完全な回答が返ってくることがある。その際は `gemini --yolo -p "指示内容"`であらゆるコマンドを実行できるようになるので完全な回答が返ってきやすくなる。
 
-### 📖 Claude Code専用ドキュメント
-**Gemini CLIを使用する前に、以下のドキュメントを必ず参照してください：**
+### タスク依頼テンプレート
 
-- **指示設計方法**: [docs/claude/gemini-templates.md](docs/claude/gemini-templates.md) - 効果的な指示の構成とテンプレート
-- **ツール選択基準**: [docs/claude/gemini-tool-selection.md](docs/claude/gemini-tool-selection.md) - 適切なツール選択の判断基準
-- **連携ワークフロー**: [docs/claude/gemini-workflows.md](docs/claude/gemini-workflows.md) - 分析結果の活用パターン
-- **トラブルシューティング**: [docs/claude/gemini-troubleshooting.md](docs/claude/gemini-troubleshooting.md) - 問題発生時の対処法
+- 技術調査テンプレート: `docs/gemini/investigation-request.md`
+- コードレビューテンプレート: `docs/gemini/code-review-request.md`
+- 実験結果レビューテンプレート: `docs/gemini/result-review-request.md`
 
-**重要**: これらのドキュメントは、Gemini CLIを効果的に活用するために必須です。使用前に必ず確認してください。
 
 ### ドキュメント
 
 Gemini CLIの使い方について悩んだときは下記のドキュメントを参照してください。
 
-- https://github.com/google-gemini/gemini-cli/blob/main/docs/index.md
+https://github.com/google-gemini/gemini-cli/blob/main/docs/index.md
+
+## プロジェクトアーキテクチャ
+
+- ソースコード: `src/bfrb/` - コアMLモジュール（モデル、評価、データ処理）
+- スクリプト: `scripts/` - 実験とセットアップのための実行可能スクリプト
+- ノートブック: `notebooks/` - データ探索と実験のためのJupyterノートブック
+- データ: `data/` - 競技データセット（train.csv、test.csvなど）
+- 提出: `submissions/` - Kaggle用に生成された提出ファイル
+- 結果: `results/` - モデル評価結果とプロット
+- テスト: `tests/` - pytestを使用したテストファイル
+- 設定: `pyproject.toml` - プロジェクト設定と依存関係
+- 依存関係: `uv.lock` - 再現可能なビルドのための依存関係ロックファイル
+- GitHubテンプレート: `.github/` - 構造化ワークフローのためのIssueとPRテンプレート
