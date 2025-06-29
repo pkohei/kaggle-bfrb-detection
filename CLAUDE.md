@@ -1,166 +1,283 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-This is a Python project called "bfrb" that uses modern development practices:
-- **uv**: Modern Python package manager for fast dependency resolution and management
-- **Docker**: Containerized development environment
-- **Dev Containers**: VS Code integration for seamless container-based development
-- **CUDA Support**: GPU computing support for machine learning workloads
+これは **Kaggle競技プロジェクト** で、GitHub IssueとPull Requestを活用した構造化実験ワークフローによるBFRB（Body-Focused Repetitive Behaviors）検出を行います：
+- **uv**: 高速な依存関係解決と管理のためのモダンなPythonパッケージマネージャー
+- **Docker**: コンテナ化された開発環境
+- **Dev Containers**: シームレスなコンテナベース開発のためのVS Code統合
+- **CUDA対応**: 機械学習ワークロードのためのGPUコンピューティングサポート
 
-### Project Description
+### プロジェクトの説明
 
-Body-focused repetitive bahaviors detection
+**Kaggle競技**: センサーデータを使用したBody-focused repetitive behaviors検出
+- **目標**: 行動パターンの多クラス分類
+- **データ**: 4つの行動クラスを持つ時系列センサーデータ
+- **評価**: テストセットでの分類精度
+- **ワークフロー**: PRベースの結果レビューを伴うIssue駆動実験開発
 
-## Development Environment
+## 開発環境
 
-This project uses DevContainer for consistent development environment across machines.
+このプロジェクトは、マシン間での一貫した開発環境のためにDevContainerを使用します。
 
-### Quick Start
+### クイックスタート
 
-1. Open the project in VS Code
-2. Run "Dev Containers: Reopen in Container" from Command Palette
-3. Install dependencies: `uv sync`
-4. Start coding!
+1. VS Codeでプロジェクトを開く
+2. コマンドパレットから「Dev Containers: Reopen in Container」を実行
+3. 依存関係をインストール: `uv sync`
+4. Kaggle認証情報を設定してデータをダウンロード: `uv run python scripts/setup_kaggle.py`
+5. ベースラインモデルを作成: `uv run python scripts/create_quick_baseline.py`
 
-## Development Commands
+## Kaggle競技コマンド
 
-### Package Management
+### セットアップとデータ管理
 
 ```bash
-# Install dependencies
+# Kaggle環境のセットアップと競技データのダウンロード
+uv run python scripts/setup_kaggle.py
+
+# プロジェクトの状況とデータサマリーの確認
+uv run python scripts/project_summary.py
+```
+
+### モデル開発
+
+```bash
+# クイックベースラインモデルの作成（高速イテレーション推奨）
+uv run python scripts/create_quick_baseline.py
+
+# 複数アルゴリズムによる包括的ベースラインの作成
+uv run python scripts/create_baseline.py
+```
+
+### パッケージ管理
+
+```bash
+# 依存関係のインストール
 uv sync
 
-# Add new package
+# 新しいパッケージの追加
 uv add package-name
 
-# Add development package
+# 開発パッケージの追加
 uv add --dev package-name
 
-# Update dependencies
+# 依存関係の更新
 uv lock --upgrade
 ```
 
-When installing dependencies, use `uv add` instead of editing pyproject.toml directly. pyproject.toml will be automatically updated.
+依存関係をインストールする際は、pyproject.tomlを直接編集するのではなく、`uv add`を使用してください。pyproject.tomlは自動的に更新されます。
 
-
-### Testing
+### テスト
 
 ```bash
-# Run all tests
+# 全テストの実行
 uv run pytest
 
-# Run with coverage report
+# カバレッジレポート付きでの実行
 uv run pytest --cov
 
-# Run specific test file
+# 特定のテストファイルの実行
 uv run pytest tests/test_main.py
 ```
 
-
-### Code Quality
+### コード品質
 
 ```bash
-# Format code
+# コードのフォーマット
 uv run ruff format
 
-# Run linting
+# リンティングの実行
 uv run ruff check
 
-# Auto-fix linting errors
+# リンティングエラーの自動修正
 uv run ruff check --fix
 ```
 
-
-### Type Checking
+### 型チェック
 
 ```bash
-# Run type checking
+# 型チェックの実行
 uv run mypy src
 ```
 
-
-### Pre-commit Hooks
+### pre-commitフック
 
 ```bash
-# Install pre-commit hooks
+# pre-commitフックのインストール
 uv run pre-commit install
 
-# Run hooks on all files
+# 全ファイルでのフック実行
 uv run pre-commit run --all-files
 ```
 
-## Project Architecture
+## プロジェクトアーキテクチャ
 
-- **Source code**: `src/bfrb/` - Main application code
-- **Tests**: `tests/` - Test files using pytest
-- **Configuration**: `pyproject.toml` - Project configuration and dependencies
-- **Dependencies**: `uv.lock` - Dependency lock file for reproducible builds
-- **Docker**: `.devcontainer/` - Development container configuration
-- **Production**: `Dockerfile.production` - Production-optimized Docker image
+### ディレクトリ構造
 
-### Key Technologies
+- **ソースコード**: `src/bfrb/` - コアMLモジュール（モデル、評価、データ処理）
+- **スクリプト**: `scripts/` - 実験とセットアップのための実行可能スクリプト
+- **ノートブック**: `notebooks/` - データ探索と実験のためのJupyterノートブック
+- **データ**: `data/` - 競技データセット（train.csv、test.csvなど）
+- **提出**: `submissions/` - Kaggle用に生成された提出ファイル
+- **結果**: `results/` - モデル評価結果とプロット
+- **テスト**: `tests/` - pytestを使用したテストファイル
+- **設定**: `pyproject.toml` - プロジェクト設定と依存関係
+- **依存関係**: `uv.lock` - 再現可能なビルドのための依存関係ロックファイル
+- **GitHubテンプレート**: `.github/` - 構造化ワークフローのためのIssueとPRテンプレート
 
-- **Python 3.12**: Programming language
-- **uv**: Fast Python package manager
-- **pytest**: Testing framework
-- **ruff**: Code formatter and linter
-- **mypy**: Static type checker
-- **pre-commit**: Git hooks for code quality
-- **CUDA 12.4**: GPU computing support
+### 主要技術
 
-## Development Guidelines
+- **Python 3.12**: プログラミング言語
+- **uv**: 高速Pythonパッケージマネージャー
+- **scikit-learn, LightGBM, XGBoost**: 機械学習アルゴリズム
+- **pandas, numpy**: データ操作と数値計算
+- **matplotlib, seaborn, plotly**: データ可視化
+- **pytest**: テストフレームワーク
+- **ruff**: コードフォーマッターとリンター
+- **mypy**: 静的型チェッカー
+- **pre-commit**: コード品質のためのGitフック
+- **Jupyter**: インタラクティブデータ分析
+- **Kaggle API**: 競技データと提出管理
 
-### Development workflow
+## 実験ワークフロー
 
-**Follow this workflow for development unless otherwise specified by the user**
+### Issue駆動実験管理
 
-1. Create and present a development plan before starting work
-2. Create a GitHub issue once the development plan is approved by the user
-3. Before starting development, checkout the default branch, run `git pull` to get the latest commits from remote repository, and create a new branch from that commit
-4. Start development on the branch created in step 3 according to the issue
-5. Make commits and pushes with appropriate granularity during development
-6. Create a PR after development is complete
-7. Address review feedback and make necessary modifications if reviews are received
-8. After PR is approved and merged, delete the branch, checkout the default branch, and run `git pull` to get the latest commits
+**ユーザーから特に指定がない限り、実験開発では以下のワークフローに従ってください**
 
-### Code Style
+1. **実験計画（GitHub Issue）**
+   - 実験テンプレートを使用してGitHub Issueを作成: `.github/ISSUE_TEMPLATE/experiment.md`
+   - 仮説、手法、成功基準、予想スケジュールを定義
+   - ベースライン比較と評価指標を含める
+   - 実験アプローチについて承認/議論を得る
 
-- Use `ruff format` for code formatting
-- Follow ruff linting rules (`ruff check`)
-- Add type hints to all functions and methods
-- Run `mypy` before committing changes
-- Follow Python naming conventions (PEP 8)
-- Write docstrings for public functions and classes
+2. **実験セットアップ**
+   - mainブランチをチェックアウトして最新の変更を取得: `git pull origin main`
+   - 実験ブランチを作成: `git checkout -b experiment/[issue番号]-[簡潔な説明]`
+   - 追跡可能性のためブランチ名にissue番号を含める
 
-### Testing
+3. **実験開発**
+   - Issueの計画に従って実験を実装
+   - 再現性のため`scripts/`でスクリプトを作成または修正
+   - 明確な結果とともにJupyterノートブックで実験を文書化
+   - issueを参照する意味のあるメッセージでコミット
 
-- Write tests for all new features
-- Maintain test coverage above 80%
-- Use descriptive test names
-- Follow AAA pattern (Arrange, Act, Assert)
+4. **実験実行と文書化**
+   - 実験を実行して結果を収集
+   - 可視化と性能指標を生成
+   - 発見、洞察、次のステップを文書化
+   - 該当する場合は提出ファイルを作成
 
-## CUDA/GPU Development
+5. **結果を含むPull Request**
+   - 実験結果テンプレートを使用してPRを作成: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
+   - 実験結果、可視化、分析を含める
+   - 主要な発見と推奨事項をまとめる
+   - 文脈のため元のIssueにリンク
 
-This project is configured for GPU computing with CUDA 12.4.
+6. **レビューと統合**
+   - レビューフィードバックと質問に対応
+   - レビュワーと結果と影響について議論
+   - 承認後にPRをマージし、関連Issueをクローズ
+   - mainブランチを更新し、実験ブランチをクリーンアップ
 
-### GPU Information
+### テンプレート
+
+- **実験Issueテンプレート**: `.github/ISSUE_TEMPLATE/experiment.md`
+- **実験PRテンプレート**: `.github/PULL_REQUEST_TEMPLATE/experiment_results.md`
+
+### 言語規約
+
+**IssueとPRは日本語で記述してください**
+- タイトル、説明、コメントすべて日本語で記述
+- コード内のコメントとdocstringも日本語推奨
+- 変数名や関数名は英語のまま（Python慣例に従う）
+
+## コード品質ガイドライン
+
+### 実験コード基準
+
+**本格コード** (src/bfrb/)：
+- 完全な型ヒントと文書化
+- 包括的なユニットテスト
+- 100% ruff/mypy準拠
+- 徹底したエラーハンドリング
+
+**実験コード** (scripts/, notebooks/)：
+- 主要関数の基本的な型ヒント
+- メインワークフローの機能テスト
+- ruffフォーマット必須、mypyの警告は許容
+- 明確なコメントと文書化
+
+**共通基準**:
+- コードフォーマットには`ruff format`を使用
+- ruffリンティングルールに従う（`ruff check`）
+- コミット前に`mypy`を実行（実験では警告OK）
+- Python命名規則に従う（PEP 8）
+- パブリック関数とクラスにdocstringを記述
+
+### 実験ベストプラクティス
+
+- **再現性**: ランダムシードを設定し、すべてのパラメータを文書化
+- **バージョン管理**: 明確で説明的なメッセージで実験コードをコミット
+- **文書化**: 探索的分析と結果にJupyterノートブックを使用
+- **性能追跡**: 検証スコアを監視し、実験履歴を追跡
+- **リソース管理**: 計算要件と実行時間を文書化
+
+### テスト要件
+
+**本格コード**:
+- 包括的なユニットテストを記述
+- テストカバレッジ80%以上を維持
+- エッジケースとエラー条件をテスト
+
+**実験コード**:
+- メイン実行パスをテスト
+- データ処理パイプラインを検証
+- 主要な結果の再現性を確保
+
+## CUDA/GPU開発
+
+このプロジェクトは、CUDA 12.4によるGPUコンピューティング用に設定されています。
+
+### GPU情報
 
 ```bash
-# Check GPU status
+# GPUステータスの確認
 nvidia-smi
 ```
 
-## Troubleshooting
+### GPU対応トレーニング
 
-### Common Issues
+```bash
+# ほとんどのMLフレームワークは利用可能な場合自動的にGPUを使用
+# トレーニング中のGPU使用量監視
+watch -n 1 nvidia-smi
+```
 
-1. **Dependency conflicts**: Run `uv lock --upgrade` to resolve
-2. **Import errors**: Ensure you're in the correct virtual environment
-3. **CUDA version mismatch**: Check host CUDA version compatibility
+## トラブルシューティング
 
-### Getting Help
+### 一般的な問題
 
-- Review uv documentation: https://docs.astral.sh/uv/
+1. **依存関係の競合**: `uv lock --upgrade`で解決
+2. **インポートエラー**: 正しい仮想環境にいることを確認
+3. **CUDAバージョンの不一致**: ホストCUDAバージョンの互換性を確認
+4. **Kaggle APIエラー**: 認証情報と競技参加を確認
+5. **メモリ問題**: 大きなデータセットにはデータサンプリングまたはバッチ処理を使用
+
+### 実験の問題
+
+1. **再現性の問題**: ランダムシードと環境の一貫性を確認
+2. **性能の後退**: 同じ検証セットを使用してベースラインと比較
+3. **リソース制約**: 実験中のメモリ/GPU使用量を監視
+4. **データリーク**: 適切なtrain/validation/testの分割を確認
+
+### ヘルプを得る
+
+- uvドキュメントのレビュー: https://docs.astral.sh/uv/
+- Kaggle競技ディスカッションフォーラムの確認
+- scripts/README.mdで詳細なコマンド使用法をレビュー
+- プロジェクト状況確認: `uv run python scripts/project_summary.py`
+- 実験計画と議論のためのGitHub Issue作成
