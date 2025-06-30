@@ -191,7 +191,10 @@ class AdvancedFeatureExtractor:
         self, df: pd.DataFrame, group_col: str = "sequence_id", max_pairs: int = 20
     ) -> pd.DataFrame:
         """
-        センサー間相関特徴量を抽出（主要ペアのみ）
+        センサー間相関特徴量を抽出（グローバル固定ペア方式）
+
+        Gemini指摘対応: 各シーケンスで異なるペアが選ばれるバイアスを修正。
+        全データで最も相関の高いペアを固定し、一貫性のある特徴量を生成。
 
         Parameters:
         -----------
@@ -210,36 +213,82 @@ class AdvancedFeatureExtractor:
         # センサー列を特定
         sensor_cols = [col for col in df.columns if col not in self.meta_columns]
 
-        def compute_correlations(group_df: pd.DataFrame) -> pd.Series:
-            """グループ内のセンサー間相関を計算"""
+        # Step 1: 全データでグローバル相関行列を計算
+        print(f"グローバル相関行列を計算中（{len(sensor_cols)}センサー）...")
+        all_sensor_data = df[sensor_cols]
+
+        if len(all_sensor_data) < 3:
+            # データ不足の場合はゼロ特徴量を返す
+            empty_features = pd.DataFrame(
+                {
+                    group_col: df[group_col].unique(),
+                    **{f"corr_{i}": 0.0 for i in range(max_pairs)},
+                }
+            )
+            return empty_features
+
+        global_corr_matrix = all_sensor_data.corr()
+
+        # Step 2: 最も相関の高い（絶対値）上位ペアを固定選択
+        sensor_pairs = []
+        correlations = []
+
+        for i in range(len(sensor_cols)):
+            for j in range(i + 1, len(sensor_cols)):
+                corr_value = global_corr_matrix.iloc[i, j]
+                if not pd.isna(corr_value):
+                    sensor_pairs.append((sensor_cols[i], sensor_cols[j]))
+                    correlations.append(corr_value)
+
+        # 絶対値で上位ペアを選択
+        abs_correlations = np.abs(np.array(correlations))  # type: ignore[arg-type]
+        sorted_indices = np.argsort(abs_correlations)[::-1]  # type: ignore[arg-type]
+        top_pairs = [sensor_pairs[idx] for idx in sorted_indices[:max_pairs]]
+
+        print(f"選択された上位{len(top_pairs)}ペア:")
+        for i, (sensor1, sensor2) in enumerate(top_pairs[:5]):  # 上位5ペアを表示
+            corr_val = correlations[sorted_indices[i]]
+            print(f"  corr_{i}: {sensor1} - {sensor2} (r={corr_val:.3f})")
+
+        # Step 3: 各シーケンスで固定ペアの相関を計算
+        def compute_fixed_correlations(group_df: pd.DataFrame) -> pd.Series:
+            """固定ペアの相関を計算"""
             sensor_data = group_df[sensor_cols]
 
-            if len(sensor_data) < 3:  # 相関計算に必要な最小データ点数
+            if len(sensor_data) < 3:
                 return pd.Series(
                     [0.0] * max_pairs, index=[f"corr_{i}" for i in range(max_pairs)]
                 )
 
-            # 相関行列を計算
-            corr_matrix = sensor_data.corr()
+            group_corr_matrix = sensor_data.corr()
+            result_correlations = []
 
-            # 上三角の相関値を抽出（対角線除く）
-            upper_triangle = np.triu(corr_matrix.values, k=1)
-            correlations = upper_triangle[upper_triangle != 0]
-
-            # 絶対値でソートして上位を選択
-            abs_correlations = np.abs(correlations)
-            sorted_indices = np.argsort(abs_correlations)[::-1]
-            top_correlations = correlations[sorted_indices[:max_pairs]]
+            for sensor1, sensor2 in top_pairs:
+                try:
+                    if (
+                        sensor1 in group_corr_matrix.columns
+                        and sensor2 in group_corr_matrix.columns
+                    ):
+                        corr_val = group_corr_matrix.loc[sensor1, sensor2]
+                        if np.isnan(corr_val):
+                            corr_val = 0.0
+                    else:
+                        corr_val = 0.0
+                    result_correlations.append(corr_val)
+                except (KeyError, IndexError):
+                    result_correlations.append(0.0)
 
             # パディングで長さを統一
-            result = np.zeros(max_pairs)
-            valid_length = min(len(top_correlations), max_pairs)
-            result[:valid_length] = top_correlations[:valid_length]
+            while len(result_correlations) < max_pairs:
+                result_correlations.append(0.0)
 
-            return pd.Series(result, index=[f"corr_{i}" for i in range(max_pairs)])
+            return pd.Series(  # type: ignore[no-any-return]
+                result_correlations[:max_pairs],
+                index=[f"corr_{i}" for i in range(max_pairs)],
+            )
 
-        # グループごとに相関特徴量を計算
-        correlation_features = df.groupby(group_col).apply(compute_correlations)
+        # グループごとに固定ペアの相関特徴量を計算
+        correlation_features = df.groupby(group_col).apply(compute_fixed_correlations)  # type: ignore[no-any-return]
         return correlation_features.reset_index()
 
     def extract_all_features(
