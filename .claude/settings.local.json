@@ -14,8 +14,13 @@
       "Bash(git pull:*)",
       "Bash(gh pr view:*)",
       "Bash(find:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gemini:*)"
     ],
-    "deny": []
+    "deny": [],
+    "env": {
+      "BASH_MAX_TIMEOUT_MS": "1200000"
+    }
   }
 }
