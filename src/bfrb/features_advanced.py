@@ -8,7 +8,6 @@ Gemini調査結果に基づく手動実装アプローチ：
 - GroupKFold/sequence_id基準の処理に最適化
 """
 
-
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -72,30 +71,52 @@ class AdvancedFeatureExtractor:
         # センサー列を特定
         sensor_cols = [col for col in df.columns if col not in self.meta_columns]
 
-        # 統計関数の定義
-        agg_funcs = {
-            "mean": "mean",
-            "std": "std",
-            "min": "min",
-            "max": "max",
-            "median": "median",
-            "skewness": lambda x: stats.skew(x, nan_policy="omit"),
-            "kurtosis": lambda x: stats.kurtosis(x, nan_policy="omit"),
-            "rms": lambda x: np.sqrt(np.mean(np.square(x))),
-            "iqr": lambda x: stats.iqr(x, nan_policy="omit"),
-            "range": lambda x: np.ptp(x),
-            "var": "var",
-            "sem": lambda x: stats.sem(x, nan_policy="omit"),
-            "cv": lambda x: stats.variation(x, nan_policy="omit"),  # 変動係数
-            "q25": lambda x: np.percentile(x, 25),
-            "q75": lambda x: np.percentile(x, 75),
-        }
+        # 統計関数のリスト（pandasのagg形式）
+        agg_funcs = [
+            "mean",
+            "std",
+            "min",
+            "max",
+            "median",
+            "var",
+            lambda x: stats.skew(x, nan_policy="omit"),
+            lambda x: stats.kurtosis(x, nan_policy="omit"),
+            lambda x: np.sqrt(np.mean(np.square(x))),
+            lambda x: stats.iqr(x, nan_policy="omit"),
+            lambda x: np.ptp(x),
+            lambda x: stats.sem(x, nan_policy="omit"),
+            lambda x: stats.variation(x, nan_policy="omit"),
+            lambda x: np.percentile(x, 25),
+            lambda x: np.percentile(x, 75),
+        ]
+
+        # 関数名のマッピング
+        func_names = [
+            "mean",
+            "std",
+            "min",
+            "max",
+            "median",
+            "var",
+            "skewness",
+            "kurtosis",
+            "rms",
+            "iqr",
+            "range",
+            "sem",
+            "cv",
+            "q25",
+            "q75",
+        ]
 
         # グループ化して統計特徴量を計算
         statistical_features = df.groupby(group_col)[sensor_cols].agg(agg_funcs)  # type: ignore[arg-type]
 
         # カラム名を平坦化 (sensor_0_mean, sensor_0_std, ...)
-        new_columns = [f"{col[0]}_{col[1]}" for col in statistical_features.columns]
+        new_columns = []
+        for sensor_col in sensor_cols:
+            for func_name in func_names:
+                new_columns.append(f"{sensor_col}_{func_name}")
         statistical_features.columns = pd.Index(new_columns)
 
         return statistical_features.reset_index()

@@ -171,7 +171,7 @@ class ModelEvaluator:
         # Save plot
         plt.savefig(
             self.save_dir
-            / f'confusion_matrix_{model_name.lower().replace(" ", "_")}.png',
+            / f"confusion_matrix_{model_name.lower().replace(' ', '_')}.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -218,7 +218,7 @@ class ModelEvaluator:
         # Save plot
         plt.savefig(
             self.save_dir
-            / f'feature_importance_{model.model_name.lower().replace(" ", "_")}.png',
+            / f"feature_importance_{model.model_name.lower().replace(' ', '_')}.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -227,7 +227,7 @@ class ModelEvaluator:
         # Save importance data
         importance_df.to_csv(
             self.save_dir
-            / f'feature_importance_{model.model_name.lower().replace(" ", "_")}.csv',
+            / f"feature_importance_{model.model_name.lower().replace(' ', '_')}.csv",
             index=False,
         )
 

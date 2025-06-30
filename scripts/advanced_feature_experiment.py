@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GroupKFold
 
@@ -42,6 +43,8 @@ class AdvancedFeatureExperiment:
         self.n_fft_features = 5
         self.max_correlation_pairs = 20
         self.cv_folds = 5
+        # Gemini指摘対応：次元削減設定
+        self.max_features = 500  # 特徴量選択後の最大次元数
 
         # 結果記録
         self.experiment_results = {
@@ -91,6 +94,24 @@ class AdvancedFeatureExperiment:
         print(f"訓練データ: {train_df.shape}")
         print(f"テストデータ: {test_df.shape}")
         print(f"ユニークsequence数 (train): {train_df['sequence_id'].nunique()}")
+
+        # behavior_binary列を作成（BFRB検出用）
+        if "behavior_binary" not in train_df.columns:
+            print("behavior_binary列を作成中...")
+            # BFRBとして扱われる行動を1に変換
+            bfrb_behaviors = [
+                "Hand at target location",
+                "Performs gesture",
+                "Relaxes and moves hand to target location",
+            ]
+            train_df["behavior_binary"] = train_df["behavior"].apply(
+                lambda x: 1 if x in bfrb_behaviors else 0
+            )
+            print("behavior分布:", train_df["behavior"].value_counts().to_dict())
+            print(
+                "behavior_binary分布:",
+                train_df["behavior_binary"].value_counts().to_dict(),
+            )
 
         return train_df, test_df
 
@@ -152,13 +173,15 @@ class AdvancedFeatureExperiment:
 
     def prepare_training_data(
         self, train_df: pd.DataFrame, features_df: pd.DataFrame
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """学習用データを準備"""
         print("学習用データを準備中...")
 
-        # sequence_idごとの代表ラベルを取得
+        # sequence_idごとの代表ラベルと被験者IDを取得
         target_df = (
-            train_df.groupby("sequence_id")["behavior_binary"].first().reset_index()
+            train_df.groupby("sequence_id")[["behavior_binary", "subject"]]
+            .first()
+            .reset_index()
         )
 
         # 特徴量とターゲットを結合
@@ -168,7 +191,8 @@ class AdvancedFeatureExperiment:
         feature_cols = [col for col in features_df.columns if col != "sequence_id"]
         X = training_data[feature_cols].values
         y = training_data["behavior_binary"].values
-        groups = training_data["sequence_id"].values
+        sequence_groups = training_data["sequence_id"].values
+        subject_groups = training_data["subject"].values
 
         print(f"学習データ準備完了: X={X.shape}, y={y.shape}")
         print(f"クラス分布: {np.bincount(y)}")
@@ -179,39 +203,57 @@ class AdvancedFeatureExperiment:
             print(f"警告: {nan_count}個のNaN値を0で置換します")
             X = np.nan_to_num(X, nan=0.0)
 
-        return X, y, groups
+        # Gemini指摘対応：特徴量選択による次元削減
+        if X.shape[1] > self.max_features:
+            print(f"特徴量選択実行: {X.shape[1]}次元 → {self.max_features}次元")
+            selector = SelectKBest(score_func=f_classif, k=self.max_features)
+            X = selector.fit_transform(X, y)
+            print(f"特徴量選択完了: {X.shape[1]}次元")
+
+        return X, y, sequence_groups, subject_groups
 
     def run_cross_validation(
-        self, X: np.ndarray, y: np.ndarray, groups: np.ndarray
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sequence_groups: np.ndarray,
+        subject_groups: np.ndarray,
     ) -> dict[str, Any]:
-        """GroupKFoldクロスバリデーション実行"""
-        print(f"{self.cv_folds}フォルドクロスバリデーション実行中...")
+        """被験者レベルGroupKFoldクロスバリデーション実行"""
+        print(
+            f"{self.cv_folds}フォルドクロスバリデーション実行中（被験者レベル分割）..."
+        )
+        print(f"ユニーク被験者数: {len(np.unique(subject_groups))}")
 
-        # GroupKFold設定
+        # GroupKFold設定（被験者レベル）
         gkf = GroupKFold(n_splits=self.cv_folds)
 
         # 結果記録用
         cv_scores = []
         fold_results = []
 
-        for fold_idx, (train_idx, val_idx) in enumerate(gkf.split(X, y, groups)):
+        for fold_idx, (train_idx, val_idx) in enumerate(
+            gkf.split(X, y, subject_groups)
+        ):
             print(f"Fold {fold_idx + 1}/{self.cv_folds} 実行中...")
 
             # 訓練・検証データ分割
             X_train, X_val = X[train_idx], X[val_idx]
             y_train, y_val = y[train_idx], y[val_idx]
 
-            # LightGBMモデル訓練
+            # LightGBMモデル訓練（Gemini指摘対応：正則化強化）
             model = LightGBMModel(
-                n_estimators=100,
-                max_depth=6,
-                learning_rate=0.1,
-                class_weight="balanced",
+                num_leaves=15,  # 31→15 複雑性削減
+                learning_rate=0.05,  # 0.1→0.05 学習を慎重に
+                n_estimators=200,  # 100→200 学習を十分に
+                min_child_samples=30,  # 過学習防止
+                lambda_l1=0.1,  # L1正則化
+                lambda_l2=0.1,  # L2正則化
                 random_state=42,
                 verbose=-1,
             )
 
-            model.fit(X_train, y_train)
+            model.train(X_train, y_train)
 
             # 予測と評価
             y_pred = model.predict(X_val)
@@ -280,19 +322,24 @@ class AdvancedFeatureExperiment:
             # 1. データ読み込み
             train_df, test_df = self.load_data()
 
-            # 2. 実験用サブサンプリング
+            # 2. 実験用サブサンプリング（Gemini指摘対応：サンプル数増加）
             sampled_train = self.subsample_for_experiment(
-                train_df, n_sequences_per_class=20
+                train_df,
+                n_sequences_per_class=50,  # 20→50に増加
             )
 
             # 3. 特徴量抽出
             features_df = self.extract_features(sampled_train)
 
             # 4. 学習用データ準備
-            X, y, groups = self.prepare_training_data(sampled_train, features_df)
+            X, y, sequence_groups, subject_groups = self.prepare_training_data(
+                sampled_train, features_df
+            )
 
             # 5. クロスバリデーション実行
-            cv_results = self.run_cross_validation(X, y, groups)
+            cv_results = self.run_cross_validation(
+                X, y, sequence_groups, subject_groups
+            )
 
             # 6. 結果保存
             self.save_results(cv_results)

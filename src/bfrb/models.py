@@ -1,6 +1,5 @@
 """Machine learning models for behavior detection."""
 
-
 from typing import Any, Protocol
 
 import lightgbm as lgb

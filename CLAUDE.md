@@ -57,7 +57,7 @@ Gemini CLIに依頼する際は「Gemini CLI 依頼ガイド」を参照する�
 8. ユーザーに実験が完了し、PRが作成されたことを伝える
 
 
-## コマンド
+## 開発
 
 ### パッケージ管理
 
@@ -68,14 +68,15 @@ uv sync
 # 新しいパッケージの追加
 uv add package-name
 
-# 開発パッケージの追加（dependency-groups使用）
+# 開発パッケージの追加
 uv add --group dev package-name
 
 # 依存関係の更新
 uv lock --upgrade
 ```
 
-依存関係をインストールする際は、pyproject.tomlを直接編集するのではなく、`uv add`を使用してください。pyproject.tomlは自動的に更新されます。
+- 依存関係をインストールする際は、pyproject.tomlを直接編集するのではなく、`uv add`を使用してください。pyproject.tomlは自動的に更新されます。
+- bfrbパッケージはeditable installされるため `sys.path.append()` は不要です。
 
 ### テスト
 
@@ -105,6 +106,8 @@ uv run ruff check --fix
 # インポート順序の自動整理
 uv run ruff check --select I --fix
 ```
+
+インポート順序で警告を受けた場合は自動整理を積極的に利用してください。
 
 ### 型チェック
 
