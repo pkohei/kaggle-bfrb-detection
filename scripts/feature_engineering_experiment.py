@@ -25,7 +25,7 @@ from sklearn.model_selection import GroupKFold, StratifiedKFold
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from bfrb.models import LightGBMModel
+from bfrb.models import LightGBMModel  # noqa: E402
 
 
 class OptimizedFeatureExtractor:
@@ -393,9 +393,9 @@ class ExperimentRunner:
         # 各behavior_binaryの比率を保持したサンプリング
         sample_sequences = []
         for behavior in [0, 1]:
-            behavior_sequences = train_df[
-                train_df["behavior_binary"] == behavior
-            ]["sequence_id"].unique()
+            behavior_sequences = train_df[train_df["behavior_binary"] == behavior][
+                "sequence_id"
+            ].unique()
             n_sample = min(10, len(behavior_sequences))  # 各クラスから最大10シーケンス
             if len(behavior_sequences) > 0:
                 sampled = np.random.choice(
